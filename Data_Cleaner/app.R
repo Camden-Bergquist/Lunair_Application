@@ -3,7 +3,7 @@ library(tidyverse)
 
 # UI definition
 ui <- fluidPage(
-  titlePanel("Data Cleaner"),
+  titlePanel("Select Parameters:"),
   sidebarLayout(
     sidebarPanel(
       fileInput("file1", "Upload CSV File",
@@ -13,9 +13,11 @@ ui <- fluidPage(
                   ".csv")
       ),
       uiOutput("time_slider"),
-      uiOutput("column_checkboxes")
+      uiOutput("column_checkboxes"),
+      uiOutput("save_button")
     ),
     mainPanel(
+      uiOutput("preview_title"),
       tableOutput("contents")
     )
   )
@@ -69,17 +71,20 @@ server <- function(input, output, session) {
   
   # Create the slider UI dynamically based on the data
   output$time_slider <- renderUI({
+    req(input$file1)  # Only render if file is loaded
     df <- output_file()
     min_time <- min(df$Time_Elapsed_MS, na.rm = TRUE)
     max_time <- max(df$Time_Elapsed_MS, na.rm = TRUE)
     
     sliderInput("timeRange", "Select Time Range (ms):", 
                 min = min_time, max = max_time, 
-                value = c(min_time, max_time))
+                value = c(min_time, max_time),
+                step = 10)  # Set step to 10ms
   })
   
   # Create checkboxes for relevant value columns
   output$column_checkboxes <- renderUI({
+    req(input$file1)  # Only render if file is loaded
     checkboxGroupInput("columns", "Select Columns to Display:",
                        choices = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                    "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
@@ -90,13 +95,29 @@ server <- function(input, output, session) {
                                     "TransthoracicImpedance"))
   })
   
+  # Create the save button dynamically based on the data
+  output$save_button <- renderUI({
+    req(input$file1)  # Only render if file is loaded
+    downloadButton("downloadData", "Save File")
+  })
+  
+  # Create the preview title dynamically based on the data
+  output$preview_title <- renderUI({
+    req(input$file1)  # Only render if file is loaded
+    h3("Preview (First 15 Rows):")
+  })
+  
   # Filter the data based on the slider input and selected columns
   filtered_data <- reactive({
     req(input$timeRange)
     df <- output_file()
-    df <- df |> filter(Time_Elapsed_MS >= input$timeRange[1], Time_Elapsed_MS <= input$timeRange[2])
+    df <- df %>% filter(Time_Elapsed_MS >= input$timeRange[1], Time_Elapsed_MS <= input$timeRange[2])
     selected_columns <- c("Time_Elapsed_MS", input$columns)
-    df <- df |> select(all_of(selected_columns))
+    df <- df %>% select(all_of(selected_columns))
+    
+    # Filter out rows where all selected columns are NA
+    df <- df %>% filter(rowSums(is.na(select(df, -Time_Elapsed_MS))) < (ncol(df) - 1))
+    
     return(df)
   })
   
@@ -105,6 +126,15 @@ server <- function(input, output, session) {
       mutate_if(is.numeric, as.integer) |> 
       head(n = 15)
   })
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("cleaned_data", ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(filtered_data(), file, row.names = FALSE)
+    }
+  )
 }
 
 # Run the application 
