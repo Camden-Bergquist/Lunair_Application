@@ -11,7 +11,9 @@ ui <- fluidPage(
                   "text/csv",
                   "text/comma-separated-values,text/plain",
                   ".csv")
-      )
+      ),
+      uiOutput("time_slider"),
+      uiOutput("column_checkboxes")
     ),
     mainPanel(
       tableOutput("contents")
@@ -33,7 +35,7 @@ extract_and_convert_to_milliseconds <- function(datetime_string) {
 }
 
 # Server definition
-server <- function(input, output) {
+server <- function(input, output, session) {
   input_file <- reactive({
     req(input$file1)
     read.csv(input$file1$datapath, sep = ";")
@@ -53,16 +55,10 @@ server <- function(input, output) {
         Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
       )
     
-    # Debug print statement to check the intermediate data
-    print(head(df))
-    
     # Ensure there are no grouping issues by summarising properly
     df <- df |>
       group_by(Time_Elapsed_MS, Channel) |>
       summarise(Value = mean(Value, na.rm = TRUE), .groups = 'drop')
-    
-    # Debug print statement to check the summarised data
-    print(head(df))
     
     # Pivot the data
     df <- df |>
@@ -71,8 +67,43 @@ server <- function(input, output) {
     return(df)
   })
   
+  # Create the slider UI dynamically based on the data
+  output$time_slider <- renderUI({
+    df <- output_file()
+    min_time <- min(df$Time_Elapsed_MS, na.rm = TRUE)
+    max_time <- max(df$Time_Elapsed_MS, na.rm = TRUE)
+    
+    sliderInput("timeRange", "Select Time Range (ms):", 
+                min = min_time, max = max_time, 
+                value = c(min_time, max_time))
+  })
+  
+  # Create checkboxes for relevant value columns
+  output$column_checkboxes <- renderUI({
+    checkboxGroupInput("columns", "Select Columns to Display:",
+                       choices = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
+                                   "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
+                                   "TransthoracicImpedance", "EventLeadImpedanceStart", 
+                                   "StimulationWaveform", "EventTherapyOn", "EventTherapyOff"),
+                       selected = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
+                                    "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
+                                    "TransthoracicImpedance"))
+  })
+  
+  # Filter the data based on the slider input and selected columns
+  filtered_data <- reactive({
+    req(input$timeRange)
+    df <- output_file()
+    df <- df |> filter(Time_Elapsed_MS >= input$timeRange[1], Time_Elapsed_MS <= input$timeRange[2])
+    selected_columns <- c("Time_Elapsed_MS", input$columns)
+    df <- df |> select(all_of(selected_columns))
+    return(df)
+  })
+  
   output$contents <- renderTable({
-    output_file() |> head(n = 15)
+    filtered_data() |> 
+      mutate_if(is.numeric, as.integer) |> 
+      head(n = 15)
   })
 }
 
