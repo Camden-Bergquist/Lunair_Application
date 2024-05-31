@@ -1,7 +1,7 @@
 library(shiny)
-library(dplyr)
-library(stringr)
+library(tidyverse)
 
+# UI definition
 ui <- fluidPage(
   titlePanel("Data Cleaner"),
   sidebarLayout(
@@ -19,8 +19,7 @@ ui <- fluidPage(
   )
 )
 
-# Function defined outside the server:
-
+# Function defined outside the server
 extract_and_convert_to_milliseconds <- function(datetime_string) {
   time_string <- str_extract(datetime_string, "\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")
   parts <- str_split(time_string, "[:.]")[[1]]
@@ -33,6 +32,7 @@ extract_and_convert_to_milliseconds <- function(datetime_string) {
   return(total_milliseconds)
 }
 
+# Server definition
 server <- function(input, output) {
   input_file <- reactive({
     req(input$file1)
@@ -40,7 +40,7 @@ server <- function(input, output) {
   })
   
   output_file <- reactive({
-    input_file() |>
+    df <- input_file() |>
       rename(
         "Start_Time" = "StartTime..MM.dd.yyyy.HH.mm.ss.fff.",
         "End_Time" = "EndTime..MM.dd.yyyy.HH.mm.ss.fff."
@@ -52,12 +52,27 @@ server <- function(input, output) {
         # Handles the time overflowing past midnight by adding 24 hours in milliseconds to the total before subtracting.
         Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
       )
+    
+    # Debug print statement to check the intermediate data
+    print(head(df))
+    
+    # Ensure there are no grouping issues by summarising properly
+    df <- df |>
+      group_by(Time_Elapsed_MS, Channel) |>
+      summarise(Value = mean(Value, na.rm = TRUE), .groups = 'drop')
+    
+    # Debug print statement to check the summarised data
+    print(head(df))
+    
+    # Pivot the data
+    df <- df |>
+      pivot_wider(names_from = Channel, values_from = Value, values_fill = NA)
+    
+    return(df)
   })
   
   output$contents <- renderTable({
-    output_file() |> 
-      select(Channel, Time_Elapsed_MS, Value) |>
-      head(n = 15)
+    output_file() |> head(n = 15)
   })
 }
 
