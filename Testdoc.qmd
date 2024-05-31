@@ -1,0 +1,96 @@
+
+```{r load-libraries}
+library(tidyverse)
+library(lubridate)
+```
+
+```{r data-read}
+testfile <- read.csv("Test_Data/markerexport1.csv", sep = ";") |>
+  rename(
+    "Start_Time" = "StartTime..MM.dd.yyyy.HH.mm.ss.fff.",
+    "End_Time" = "EndTime..MM.dd.yyyy.HH.mm.ss.fff."
+  ) |>
+  select(-End_Time)
+```
+
+```{r change_column_format}
+parse_date_with_millis <- function(date_string) {
+  ymd_hms(date_string, tz = "UTC", quiet = TRUE)
+}
+
+testfile$Start_Time <- lubridate::fast_strptime(testfile$Start_Time, format = "%m/%d/%Y %H:%M:%OS", tz = "UTC")
+testfile$End_Time <- lubridate::fast_strptime(testfile$End_Time, format = "%m/%d/%Y %H:%M:%OS", tz = "UTC")
+```
+
+```{r extract_milliseconds}
+extract_seconds_milliseconds <- function(datetime_string) {
+  str_extract(datetime_string, "\\d{2}\\.\\d{3}$")
+}
+
+# Apply the function to Start_Time and End_Time columns
+testfile$Start_Seconds_Milliseconds <- sapply(testfile$Start_Time, extract_seconds_milliseconds)
+testfile$End_Seconds_Milliseconds <- sapply(testfile$End_Time, extract_seconds_milliseconds)
+
+
+testfile <- testfile %>%
+  mutate(
+    Start_Seconds_Milliseconds = as.numeric(Start_Seconds_Milliseconds),
+    End_Seconds_Milliseconds = as.numeric(End_Seconds_Milliseconds),
+    Milliseconds_Difference = End_Seconds_Milliseconds - Start_Seconds_Milliseconds
+  )
+  
+#### Below here is the important part.
+
+extract_time <- function(datetime_string) {
+  str_extract(datetime_string, "\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")
+}
+
+# Apply the function to Start_Time column and create a new column
+testfile <- testfile %>%
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time))
+
+# Function to convert HH:MM:SS.MS to milliseconds
+convert_to_milliseconds <- function(time_string) {
+  parts <- str_split(time_string, "[:.]")[[1]]
+  hours <- as.numeric(parts[1])
+  minutes <- as.numeric(parts[2])
+  seconds <- as.numeric(parts[3])
+  milliseconds <- as.numeric(parts[4])
+  
+  total_milliseconds <- (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds
+  return(total_milliseconds)
+}
+
+# Apply the function to Start_Time_HHMMSSMS column and create a new column
+testfile <- testfile %>%
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) %>%
+  mutate(Start_Time_Milliseconds = sapply(Start_Time_HHMMSSMS, convert_to_milliseconds))
+```
+
+```{r final-streamlined-code}
+extract_time <- function(datetime_string) {
+  str_extract(datetime_string, "\\d{2}:\\d{2}:\\d{2}\\.\\d{3}")
+}
+
+# Apply the function to Start_Time column and create a new column
+testfile <- testfile %>%
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time))
+
+# Function to convert HH:MM:SS.MS to milliseconds
+convert_to_milliseconds <- function(time_string) {
+  parts <- str_split(time_string, "[:.]")[[1]]
+  hours <- as.numeric(parts[1])
+  minutes <- as.numeric(parts[2])
+  seconds <- as.numeric(parts[3])
+  milliseconds <- as.numeric(parts[4])
+  
+  total_milliseconds <- (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + milliseconds
+  return(total_milliseconds)
+}
+
+# Apply the function to Start_Time_HHMMSSMS column and create a new column
+testfile <- testfile %>%
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) %>%
+  mutate(Start_Time_Milliseconds = sapply(Start_Time_HHMMSSMS, convert_to_milliseconds))
+```
+
