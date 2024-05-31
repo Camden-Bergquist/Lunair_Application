@@ -3,10 +3,10 @@ library(dplyr)
 library(stringr)
 
 ui <- fluidPage(
-  titlePanel("CSV File Upload"),
+  titlePanel("Data Cleaner"),
   sidebarLayout(
     sidebarPanel(
-      fileInput("file1", "Choose CSV File",
+      fileInput("file1", "Upload CSV File",
                 accept = c(
                   "text/csv",
                   "text/comma-separated-values,text/plain",
@@ -46,16 +46,18 @@ server <- function(input, output) {
         "End_Time" = "EndTime..MM.dd.yyyy.HH.mm.ss.fff."
       ) |>
       select(-End_Time) |>
-      mutate(Start_Time_MS = sapply(Start_Time, extract_and_convert_to_milliseconds),
-             Time_Elapsed_MS = Start_Time_MS - min(Start_Time_MS))
-  })
-  
-  standardized_start_time <- reactive({
-    min(output_file()$Start_Time_MS)
+      mutate(
+        Start_Time_MS = sapply(Start_Time, extract_and_convert_to_milliseconds),
+        Time_Elapsed_MS = Start_Time_MS - Start_Time_MS[1],
+        # Handles the time overflowing past midnight by adding 24 hours in milliseconds to the total before subtracting.
+        Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
+      )
   })
   
   output$contents <- renderTable({
-    output_file()
+    output_file() |> 
+      select(Channel, Time_Elapsed_MS, Value) |>
+      head(n = 15)
   })
 }
 
