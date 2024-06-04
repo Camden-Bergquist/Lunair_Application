@@ -57,7 +57,7 @@ server <- function(input, output, session) {
         Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
       )
     
-    # Ensure there are no grouping issues by summarising properly
+    # Ensure there are no grouping issues by summarizing properly
     df <- df |>
       group_by(Time_Elapsed_MS, Channel) |>
       summarise(Value = mean(Value, na.rm = TRUE), .groups = 'drop')

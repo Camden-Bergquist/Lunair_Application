@@ -94,3 +94,7 @@ testfile <- testfile %>%
   mutate(Start_Time_Milliseconds = sapply(Start_Time_HHMMSSMS, convert_to_milliseconds))
 ```
 
+```{r acc-test}
+acctest <- testfile <- read.csv("Test_Data/AccelerometerTest.csv", sep = ";")
+```
+
