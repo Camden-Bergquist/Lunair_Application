@@ -6,11 +6,11 @@ library(plotly)
 
 # UI definition
 ui <- dashboardPage(
-  dashboardHeader(title = "Data Analysis Dashboard"),
+  dashboardHeader(title = "Data Tool"),
   dashboardSidebar(
     sidebarMenu(
-      menuItem("Data", tabName = "data_tab", icon = icon("table")),
-      menuItem("Graphs", tabName = "graphs_tab", icon = icon("chart-line"))
+      menuItem("Data Manipulation", tabName = "data_tab", icon = icon("table")),
+      menuItem("Data Visualization", tabName = "graphs_tab", icon = icon("chart-line"))
     )
   ),
   dashboardBody(
@@ -49,7 +49,7 @@ ui <- dashboardPage(
       # Second tab content
       tabItem(tabName = "graphs_tab",
               fluidPage(
-                titlePanel("Graphs"),
+                titlePanel(""),
                 div(style = "height: 100%;", plotlyOutput("acceleration_plotly", height = "100%"))  # Updated to plotlyOutput with height and width
               )
       )
