@@ -20,14 +20,9 @@ ui <- dashboardPage(
                 titlePanel("Select Parameters:"),
                 sidebarLayout(
                   sidebarPanel(
-                    fileInput("file1", "Upload CSV File",
-                              accept = c(
-                                "text/csv",
-                                "text/comma-separated-values,text/plain",
-                                ".csv")
-                    ),
                     uiOutput("time_slider"),
                     uiOutput("column_checkboxes"),
+                    uiOutput("upload_button"),
                     uiOutput("save_button")
                   ),
                   mainPanel(
@@ -64,8 +59,22 @@ extract_and_convert_to_milliseconds <- function(datetime_string) {
 
 # Server definition
 server <- function(input, output, session) {
+  # Show modal dialog to upload file at the start
+  showModal(modalDialog(
+    title = "Upload CSV File",
+    fileInput("file1", "Upload CSV File",
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values,text/plain",
+                ".csv")
+    ),
+    easyClose = FALSE,
+    footer = NULL
+  ))
+  
   input_file <- reactive({
     req(input$file1)
+    removeModal()  # Close the modal when a file is uploaded
     read.csv(input$file1$datapath, sep = ";")
   })
   
@@ -121,6 +130,12 @@ server <- function(input, output, session) {
                                     "TransthoracicImpedance"))
   })
   
+  # Create the upload new file button
+  output$upload_button <- renderUI({
+    req(input$file1)  # Only render if file is loaded
+    actionButton("upload_new_file", "Upload New File")
+  })
+  
   # Create the save button dynamically based on the data
   output$save_button <- renderUI({
     req(input$file1)  # Only render if file is loaded
@@ -137,12 +152,12 @@ server <- function(input, output, session) {
   filtered_data <- reactive({
     req(input$timeRange)
     df <- output_file()
-    df <- df %>% filter(Time_Elapsed_MS >= input$timeRange[1], Time_Elapsed_MS <= input$timeRange[2])
+    df <- df |> filter(Time_Elapsed_MS >= input$timeRange[1], Time_Elapsed_MS <= input$timeRange[2])
     selected_columns <- c("Time_Elapsed_MS", input$columns)
-    df <- df %>% select(all_of(selected_columns))
+    df <- df |> select(all_of(selected_columns))
     
     # Filter out rows where all selected columns are NA
-    df <- df %>% filter(rowSums(is.na(select(df, -Time_Elapsed_MS))) < (ncol(df) - 1))
+    df <- df |> filter(rowSums(is.na(select(df, -Time_Elapsed_MS))) < (ncol(df) - 1))
     
     return(df)
   })
@@ -160,6 +175,21 @@ server <- function(input, output, session) {
       write.csv(filtered_data(), file, row.names = FALSE)
     }
   )
+  
+  # Observe the upload new file button to show the modal again
+  observeEvent(input$upload_new_file, {
+    showModal(modalDialog(
+      title = "Upload CSV File",
+      fileInput("file1", "Upload CSV File",
+                accept = c(
+                  "text/csv",
+                  "text/comma-separated-values,text/plain",
+                  ".csv")
+      ),
+      easyClose = FALSE,
+      footer = NULL
+    ))
+  })
 }
 
 # Run the application 

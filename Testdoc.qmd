@@ -1,7 +1,10 @@
+## This QMD file serves as a place to test code before applying it to the application. Has no actual production value; think of it as scratch paper.
+
 
 ```{r load-libraries}
 library(tidyverse)
 library(lubridate)
+library(plotly)
 ```
 
 ```{r data-read}
@@ -32,7 +35,7 @@ testfile$Start_Seconds_Milliseconds <- sapply(testfile$Start_Time, extract_secon
 testfile$End_Seconds_Milliseconds <- sapply(testfile$End_Time, extract_seconds_milliseconds)
 
 
-testfile <- testfile %>%
+testfile <- testfile |>
   mutate(
     Start_Seconds_Milliseconds = as.numeric(Start_Seconds_Milliseconds),
     End_Seconds_Milliseconds = as.numeric(End_Seconds_Milliseconds),
@@ -46,7 +49,7 @@ extract_time <- function(datetime_string) {
 }
 
 # Apply the function to Start_Time column and create a new column
-testfile <- testfile %>%
+testfile <- testfile |>
   mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time))
 
 # Function to convert HH:MM:SS.MS to milliseconds
@@ -62,8 +65,8 @@ convert_to_milliseconds <- function(time_string) {
 }
 
 # Apply the function to Start_Time_HHMMSSMS column and create a new column
-testfile <- testfile %>%
-  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) %>%
+testfile <- testfile |>
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) |>
   mutate(Start_Time_Milliseconds = sapply(Start_Time_HHMMSSMS, convert_to_milliseconds))
 ```
 
@@ -73,7 +76,7 @@ extract_time <- function(datetime_string) {
 }
 
 # Apply the function to Start_Time column and create a new column
-testfile <- testfile %>%
+testfile <- testfile |>
   mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time))
 
 # Function to convert HH:MM:SS.MS to milliseconds
@@ -89,12 +92,30 @@ convert_to_milliseconds <- function(time_string) {
 }
 
 # Apply the function to Start_Time_HHMMSSMS column and create a new column
-testfile <- testfile %>%
-  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) %>%
+testfile <- testfile |>
+  mutate(Start_Time_HHMMSSMS = sapply(Start_Time, extract_time)) |>
   mutate(Start_Time_Milliseconds = sapply(Start_Time_HHMMSSMS, convert_to_milliseconds))
 ```
 
 ```{r acc-test}
-acctest <- testfile <- read.csv("Test_Data/AccelerometerTest.csv", sep = ";")
+acctest <- read.csv("Test_Data/AccelerometerTest.csv", sep = ";")
+
+accgraph <- read.csv("Test_Data/Just_Accelerometer_for_Graph_Tests.csv", sep = ",")
+```
+
+```{r plotly-accelerometer}
+acceleration_plotly <- plot_ly(accgraph, x = ~Time_Elapsed_MS) |>
+  add_lines(y = ~IMUAccelerometerX, name = 'Accelerometer X', line = list(color = 'blue2', width = 2), opacity = 0.5) |>
+  add_lines(y = ~IMUAccelerometerY, name = 'Accelerometer Y', line = list(color = 'purple', width = 2), opacity = 0.5) |>
+  add_lines(y = ~IMUAccelerometerZ, name = 'Accelerometer Z', line = list(color = 'green', width = 2), opacity = 0.5) |>
+  layout(
+    title = 'Accelerometer Data',
+    xaxis = list(title = 'Time Elapsed (ms)'),
+    yaxis = list(title = 'Acceleration', range = c(-36000, 36000)),
+    template = 'plotly_white'
+  )
+
+# Display the plot
+acceleration_plotly
 ```
 
