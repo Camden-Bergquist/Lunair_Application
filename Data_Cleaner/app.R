@@ -1,24 +1,50 @@
 library(shiny)
 library(tidyverse)
+library(shinydashboard)
+library(DT)
 
 # UI definition
-ui <- fluidPage(
-  titlePanel("Select Parameters:"),
-  sidebarLayout(
-    sidebarPanel(
-      fileInput("file1", "Upload CSV File",
-                accept = c(
-                  "text/csv",
-                  "text/comma-separated-values,text/plain",
-                  ".csv")
+ui <- dashboardPage(
+  dashboardHeader(title = "Data Analysis Dashboard"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Data", tabName = "data_tab", icon = icon("table")),
+      menuItem("Graphs", tabName = "graphs_tab", icon = icon("chart-line"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      # First tab content
+      tabItem(tabName = "data_tab",
+              fluidPage(
+                titlePanel("Select Parameters:"),
+                sidebarLayout(
+                  sidebarPanel(
+                    fileInput("file1", "Upload CSV File",
+                              accept = c(
+                                "text/csv",
+                                "text/comma-separated-values,text/plain",
+                                ".csv")
+                    ),
+                    uiOutput("time_slider"),
+                    uiOutput("column_checkboxes"),
+                    uiOutput("save_button")
+                  ),
+                  mainPanel(
+                    uiOutput("preview_title"),
+                    DTOutput("contents")  # Updated to DTOutput
+                  )
+                )
+              )
       ),
-      uiOutput("time_slider"),
-      uiOutput("column_checkboxes"),
-      uiOutput("save_button")
-    ),
-    mainPanel(
-      uiOutput("preview_title"),
-      tableOutput("contents")
+      # Second tab content
+      tabItem(tabName = "graphs_tab",
+              fluidPage(
+                titlePanel("Graphs"),
+                # Placeholder for future graph outputs
+                p("Graph outputs will be displayed here.")
+              )
+      )
     )
   )
 )
@@ -85,7 +111,7 @@ server <- function(input, output, session) {
   # Create checkboxes for relevant value columns
   output$column_checkboxes <- renderUI({
     req(input$file1)  # Only render if file is loaded
-    checkboxGroupInput("columns", "Select Columns to Display:",
+    checkboxGroupInput("columns", "Select Columns to Include:",
                        choices = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                    "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
                                    "TransthoracicImpedance", "EventLeadImpedanceStart", 
@@ -104,7 +130,7 @@ server <- function(input, output, session) {
   # Create the preview title dynamically based on the data
   output$preview_title <- renderUI({
     req(input$file1)  # Only render if file is loaded
-    h3("Preview (First 15 Rows):")
+    h3("Preview:")
   })
   
   # Filter the data based on the slider input and selected columns
@@ -121,10 +147,9 @@ server <- function(input, output, session) {
     return(df)
   })
   
-  output$contents <- renderTable({
-    filtered_data() |> 
-      mutate_if(is.numeric, as.integer) |> 
-      head(n = 15)
+  output$contents <- renderDT({
+    datatable(filtered_data(),
+              options = list(scrollX = TRUE))  # Enable horizontal scrolling
   })
   
   output$downloadData <- downloadHandler(
