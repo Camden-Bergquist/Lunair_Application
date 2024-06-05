@@ -49,8 +49,9 @@ ui <- dashboardPage(
       # Second tab content
       tabItem(tabName = "graphs_tab",
               fluidPage(
-                titlePanel(""),
-                div(style = "height: 100%;", plotlyOutput("acceleration_plotly", height = "100%"))  # Updated to plotlyOutput with height and width
+                titlePanel("Data Visualization"),
+                selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope")),
+                div(style = "height: 100%;", plotlyOutput("plotly_graph", height = "100%"))  # Updated to plotlyOutput with height and width
               )
       )
     )
@@ -204,27 +205,47 @@ server <- function(input, output, session) {
     ))
   })
   
-  # Render Plotly plot in the "Graphs" tab
-  output$acceleration_plotly <- renderPlotly({
+  # Render Plotly plot in the "Graphs" tab based on selection
+  output$plotly_graph <- renderPlotly({
     req(input$file1)  # Ensure the file is uploaded
     
-    accgraph <- output_file() |> 
-      select(Time_Elapsed_MS, IMUAccelerometerX, IMUAccelerometerY, IMUAccelerometerZ) |>
-      filter(!is.na(Time_Elapsed_MS) & !is.na(IMUAccelerometerX) & !is.na(IMUAccelerometerY) & !is.na(IMUAccelerometerZ))
+    df <- output_file()
     
-    plot_ly(accgraph, x = ~Time_Elapsed_MS, height = 600) |>
-      add_lines(y = ~IMUAccelerometerX, name = 'Accelerometer X', line = list(color = 'blue2', width = 2), opacity = 0.5) |>
-      add_lines(y = ~IMUAccelerometerY, name = 'Accelerometer Y', line = list(color = 'purple', width = 2), opacity = 0.5) |>
-      add_lines(y = ~IMUAccelerometerZ, name = 'Accelerometer Z', line = list(color = 'green', width = 2), opacity = 0.5) |>
-      layout(
-        title = 'Accelerometer Data',
-        # automargin and autorange essentially renders the graph with the autoscale option already chosen.
-        xaxis = list(title = 'Time Elapsed (ms)', automargin = TRUE, autorange = TRUE),
-        yaxis = list(title = 'Acceleration', range = c(-36000, 36000), automargin = TRUE, autorange = TRUE),
-        template = 'plotly_white',
-        autosize = TRUE,
-        margin = list(t = 50, b = 50, l = 50, r = 50)
-      )
+    if (input$graph_type == "Accelerometer") {
+      plot_data <- df |> 
+        select(Time_Elapsed_MS, IMUAccelerometerX, IMUAccelerometerY, IMUAccelerometerZ) |>
+        filter(!is.na(Time_Elapsed_MS) & !is.na(IMUAccelerometerX) & !is.na(IMUAccelerometerY) & !is.na(IMUAccelerometerZ))
+      
+      plot_ly(plot_data, x = ~Time_Elapsed_MS, height = 600) |>
+        add_lines(y = ~IMUAccelerometerX, name = 'Accelerometer X', line = list(color = 'blue2', width = 2), opacity = 0.5) |>
+        add_lines(y = ~IMUAccelerometerY, name = 'Accelerometer Y', line = list(color = 'purple', width = 2), opacity = 0.5) |>
+        add_lines(y = ~IMUAccelerometerZ, name = 'Accelerometer Z', line = list(color = 'green', width = 2), opacity = 0.5) |>
+        layout(
+          title = 'Accelerometer Data',
+          xaxis = list(title = 'Time Elapsed (ms)', automargin = TRUE, autorange = TRUE),
+          yaxis = list(title = 'Acceleration', range = c(-36000, 36000), automargin = TRUE, autorange = TRUE),
+          template = 'plotly_white',
+          autosize = TRUE,
+          margin = list(t = 50, b = 50, l = 50, r = 50)
+        )
+    } else {
+      plot_data <- df |> 
+        select(Time_Elapsed_MS, IMUGyroscopeX, IMUGyroscopeY, IMUGyroscopeZ) |>
+        filter(!is.na(Time_Elapsed_MS) & !is.na(IMUGyroscopeX) & !is.na(IMUGyroscopeY) & !is.na(IMUGyroscopeZ))
+      
+      plot_ly(plot_data, x = ~Time_Elapsed_MS, height = 600) |>
+        add_lines(y = ~IMUGyroscopeX, name = 'Gyroscope X', line = list(color = 'blue2', width = 2), opacity = 0.5) |>
+        add_lines(y = ~IMUGyroscopeY, name = 'Gyroscope Y', line = list(color = 'purple', width = 2), opacity = 0.5) |>
+        add_lines(y = ~IMUGyroscopeZ, name = 'Gyroscope Z', line = list(color = 'green', width = 2), opacity = 0.5) |>
+        layout(
+          title = 'Gyroscope Data',
+          xaxis = list(title = 'Time Elapsed (ms)', automargin = TRUE, autorange = TRUE),
+          yaxis = list(title = 'Rotation', range = c(-36000, 36000), automargin = TRUE, autorange = TRUE),
+          template = 'plotly_white',
+          autosize = TRUE,
+          margin = list(t = 50, b = 50, l = 50, r = 50)
+        )
+    }
   })
 }
 
