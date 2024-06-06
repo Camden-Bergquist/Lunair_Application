@@ -1,0 +1,19 @@
+# QMD file used to test the compilation of the app into an executable.
+
+```{r libraries}
+library(RInno)
+```
+
+```{r build}
+create_app(
+  app_name = "Data Tool",
+  app_dir = "C:/Users/camde/Desktop/Work/Lunair/Lunair_Application/Data_Cleaner",
+  include_R = TRUE,
+  R_version = "4.3.3",
+  pkgs = c("shiny", "tidyverse", "shinydashboard", "DT", "plotly"),
+  default_dir = "pf",
+  compression = "zip"
+)
+compile_iss()
+```
+
