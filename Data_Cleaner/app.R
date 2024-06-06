@@ -249,7 +249,7 @@ server <- function(input, output, session) {
       ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
       ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance))
       
-      plot_ly() |>
+      plot_ly(height = 600) |>
         add_lines(
           x = ~ImpWav_filtered_waveform$Time_Elapsed_MS,
           y = ~ImpWav_filtered_waveform$StimulationWaveform,

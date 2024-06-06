@@ -158,7 +158,8 @@ ImpWav_Plotly <- plot_ly() |>
       autorange = TRUE
     ),
     xaxis = list(title = 'Time Elapsed (MS)'),
-    legend = list(orientation = 'h')
+    legend = list(orientation = 'h'),
+    height = 900
   )
 
 # Show the plot
