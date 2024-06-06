@@ -50,7 +50,7 @@ ui <- dashboardPage(
       tabItem(tabName = "graphs_tab",
               fluidPage(
                 titlePanel("Data Visualization"),
-                selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope")),
+                selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope", "Stimulus")),
                 div(style = "height: 100%;", plotlyOutput("plotly_graph", height = "100%"))  # Updated to plotlyOutput with height and width
               )
       )
@@ -228,7 +228,7 @@ server <- function(input, output, session) {
           autosize = TRUE,
           margin = list(t = 50, b = 50, l = 50, r = 50)
         )
-    } else {
+    } else if (input$graph_type == "Gyroscope") {
       plot_data <- df |> 
         select(Time_Elapsed_MS, IMUGyroscopeX, IMUGyroscopeY, IMUGyroscopeZ) |>
         filter(!is.na(Time_Elapsed_MS) & !is.na(IMUGyroscopeX) & !is.na(IMUGyroscopeY) & !is.na(IMUGyroscopeZ))
@@ -242,6 +242,46 @@ server <- function(input, output, session) {
           xaxis = list(title = 'Time Elapsed (ms)', automargin = TRUE, autorange = TRUE),
           yaxis = list(title = 'Rotation', range = c(-36000, 36000), automargin = TRUE, autorange = TRUE),
           template = 'plotly_white',
+          autosize = TRUE,
+          margin = list(t = 50, b = 50, l = 50, r = 50)
+        )
+    } else if (input$graph_type == "Stimulus") {
+      ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
+      ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance))
+      
+      plot_ly() |>
+        add_lines(
+          x = ~ImpWav_filtered_waveform$Time_Elapsed_MS,
+          y = ~ImpWav_filtered_waveform$StimulationWaveform,
+          name = 'Stimulation Waveform',
+          line = list(color = 'gold', opacity = 0.5),
+          yaxis = 'y1'
+        ) |>
+        add_lines(
+          x = ~ImpWav_filtered_impedance$Time_Elapsed_MS,
+          y = ~ImpWav_filtered_impedance$TransthoracicImpedance,
+          name = 'Transthoracic Impedance',
+          line = list(color = 'green', opacity = 0.5),
+          yaxis = 'y2'
+        ) |>
+        layout(
+          yaxis = list(
+            title = 'Stimulation Waveform',
+            range = c(0, 8000),
+            autorange = TRUE,
+            automargin = TRUE
+          ),
+          yaxis2 = list(
+            title = 'Transthoracic Impedance',
+            overlaying = 'y',
+            side = 'right',
+            standoff = 15,
+            range = c(0, 8000),
+            autorange = TRUE,
+            automargin = TRUE
+          ),
+          xaxis = list(title = 'Time Elapsed (ms)', automargin = TRUE, autorange = TRUE),
+          legend = list(orientation = 'h'),
           autosize = TRUE,
           margin = list(t = 50, b = 50, l = 50, r = 50)
         )

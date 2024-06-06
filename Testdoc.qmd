@@ -119,3 +119,60 @@ acceleration_plotly <- plot_ly(accgraph, x = ~Time_Elapsed_MS) |>
 acceleration_plotly
 ```
 
+```{r ImpWav-Read}
+ImpWav <- read.csv("Test_Data/Impedance-Waveform_Test.csv", sep = ",")
+```
+
+```{r ImpWav-Graph}
+ImpWav_filtered_waveform <- ImpWav |> filter(!is.na(StimulationWaveform))
+ImpWav_filtered_impedance <- ImpWav |> filter(!is.na(TransthoracicImpedance))
+
+# Create the plot with both variables on different y-axes and specified settings
+ImpWav_Plotly <- plot_ly() |>
+  add_lines(
+    x = ~ImpWav_filtered_waveform$Time_Elapsed_MS,
+    y = ~ImpWav_filtered_waveform$StimulationWaveform,
+    name = 'Stimulation Waveform',
+    line = list(color = 'gold', opacity = 0.5),
+    yaxis = 'y1'
+  ) |>
+  add_lines(
+    x = ~ImpWav_filtered_impedance$Time_Elapsed_MS,
+    y = ~ImpWav_filtered_impedance$TransthoracicImpedance,
+    name = 'Transthoracic Impedance',
+    line = list(color = 'green', opacity = 0.5),
+    yaxis = 'y2'
+  ) |>
+  layout(
+    yaxis = list(
+      title = 'Stimulation Waveform',
+      range = c(0, 8000),
+      autorange = TRUE
+    ),
+    yaxis2 = list(
+      title = 'Transthoracic Impedance',
+      overlaying = 'y',
+      side = 'right',
+      standoff = 15,
+      range = c(0, 8000),
+      autorange = TRUE
+    ),
+    xaxis = list(title = 'Time Elapsed (MS)'),
+    legend = list(orientation = 'h')
+  )
+
+# Show the plot
+ImpWav_Plotly
+
+########### ggplot test:
+# ImpWav |> filter(!is.na(StimulationWaveform)) |> 
+#   ggplot(aes(x = Time_Elapsed_MS, y = StimulationWaveform)) +
+#   geom_line()
+# 
+# ImpWav |> filter(!is.na(TransthoracicImpedance)) |> 
+#   ggplot(aes(x = Time_Elapsed_MS, y = TransthoracicImpedance)) +
+#   geom_line()
+
+########### plotly plot:
+```
+
