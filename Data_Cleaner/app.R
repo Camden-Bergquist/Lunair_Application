@@ -41,7 +41,7 @@ ui <- dashboardPage(
                   ),
                   mainPanel(
                     uiOutput("preview_title"),
-                    DTOutput("contents")  # Updated to DTOutput
+                    withSpinner(DTOutput("contents"))  # Added spinner
                   )
                 )
               )
@@ -51,7 +51,7 @@ ui <- dashboardPage(
               fluidPage(
                 titlePanel("Data Visualization"),
                 selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope", "Stimulus")),
-                div(style = "height: 100%;", plotlyOutput("plotly_graph", height = "100%"))  # Updated to plotlyOutput with height and width
+                div(style = "height: 100%;", withSpinner(plotlyOutput("plotly_graph", height = "100%")))  # Added spinner
               )
       )
     )
@@ -97,29 +97,40 @@ server <- function(input, output, session) {
   })
   
   output_file <- reactive({
-    df <- input_file() |>
-      rename(
-        "Start_Time" = "StartTime..MM.dd.yyyy.HH.mm.ss.fff.",
-        "End_Time" = "EndTime..MM.dd.yyyy.HH.mm.ss.fff."
-      ) |>
-      select(-End_Time) |>
-      mutate(
-        Start_Time_MS = sapply(Start_Time, extract_and_convert_to_milliseconds),
-        Time_Elapsed_MS = Start_Time_MS - Start_Time_MS[1],
-        # Handles the time overflowing past midnight by adding 24 hours in milliseconds to the total before subtracting.
-        Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
-      )
-    
-    # Ensure there are no grouping issues by summarizing properly
-    df <- df |>
-      group_by(Time_Elapsed_MS, Channel) |>
-      summarise(Value = mean(Value, na.rm = TRUE), .groups = 'drop')
-    
-    # Pivot the data
-    df <- df |>
-      pivot_wider(names_from = Channel, values_from = Value, values_fill = NA)
-    
-    return(df)
+    withProgress(message = 'Loading file...', value = 0, {
+      df <- input_file()
+      incProgress(0.2)
+      
+      df <- df |>
+        rename(
+          "Start_Time" = "StartTime..MM.dd.yyyy.HH.mm.ss.fff.",
+          "End_Time" = "EndTime..MM.dd.yyyy.HH.mm.ss.fff."
+        ) |>
+        select(-End_Time) |>
+        mutate(
+          Start_Time_MS = sapply(Start_Time, extract_and_convert_to_milliseconds),
+          Time_Elapsed_MS = Start_Time_MS - Start_Time_MS[1],
+          # Handles the time overflowing past midnight by adding 24 hours in milliseconds to the total before subtracting.
+          Time_Elapsed_MS = ifelse(Time_Elapsed_MS < 0, Start_Time_MS + (24 * 60 * 60 * 1000) - Start_Time_MS[1], Time_Elapsed_MS)
+        )
+      
+      incProgress(0.4)
+      
+      # Ensure there are no grouping issues by summarizing properly
+      df <- df |>
+        group_by(Time_Elapsed_MS, Channel) |>
+        summarise(Value = mean(Value, na.rm = TRUE), .groups = 'drop')
+      
+      incProgress(0.6)
+      
+      # Pivot the data
+      df <- df |>
+        pivot_wider(names_from = Channel, values_from = Value, values_fill = NA)
+      
+      incProgress(0.8)
+      
+      df
+    })
   })
   
   # Create the slider UI dynamically based on the data
