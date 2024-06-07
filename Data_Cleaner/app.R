@@ -250,26 +250,20 @@ server <- function(input, output, session) {
           margin = list(t = 50, b = 50, l = 50, r = 50)
         )
     } else if (input$graph_type == "Stimulus") {
-      ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
-      ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance)) |>
-        # Convert to ohms.
-        mutate(TransthoracicImpedance = ((TransthoracicImpedance * 0.04176689) - 8.5538812))
-      
-      plot_ly(height = 600) |>
-        add_lines(
-          x = ~ImpWav_filtered_waveform$Time_Elapsed_MS,
-          y = ~ImpWav_filtered_waveform$StimulationWaveform,
-          name = 'Stimulation Waveform',
-          line = list(color = 'gold', opacity = 0.5),
-          yaxis = 'y1'
-        ) |>
-        add_lines(
-          x = ~ImpWav_filtered_impedance$Time_Elapsed_MS,
-          y = ~ImpWav_filtered_impedance$TransthoracicImpedance,
-          name = 'Transthoracic Impedance (Ohms)',
-          line = list(color = 'green', opacity = 0.5),
-          yaxis = 'y2'
-        ) |>
+      # Check if columns exist before plotting
+      plot_ly(height = 600) %>%
+        {if ("StimulationWaveform" %in% colnames(df)) {
+          ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
+          add_lines(., x = ~ImpWav_filtered_waveform$Time_Elapsed_MS, y = ~ImpWav_filtered_waveform$StimulationWaveform,
+                    name = 'Stimulation Waveform', line = list(color = 'gold', opacity = 0.5), yaxis = 'y1')
+        } else .} %>%
+        {if ("TransthoracicImpedance" %in% colnames(df)) {
+          ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance)) |>
+            # Convert to ohms.
+            mutate(TransthoracicImpedance = ((TransthoracicImpedance * 0.04176689) - 8.5538812))
+          add_lines(., x = ~ImpWav_filtered_impedance$Time_Elapsed_MS, y = ~ImpWav_filtered_impedance$TransthoracicImpedance,
+                    name = 'Transthoracic Impedance (Ohms)', line = list(color = 'green', opacity = 0.5), yaxis = 'y2')
+        } else .} %>%
         layout(
           yaxis = list(
             title = 'Stimulation Waveform',
