@@ -73,6 +73,10 @@ extract_and_convert_to_milliseconds <- function(datetime_string) {
 
 # Server definition
 server <- function(input, output, session) {
+  
+  # Set maximum file upload size (currently 64MB)
+  options(shiny.maxRequestSize = 64 * 1024^2)
+  
   # Show modal dialog to upload file at the start
   showModal(modalDialog(
     title = "Upload CSV File",
@@ -247,7 +251,9 @@ server <- function(input, output, session) {
         )
     } else if (input$graph_type == "Stimulus") {
       ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
-      ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance))
+      ImpWav_filtered_impedance <- df |> filter(!is.na(TransthoracicImpedance)) |>
+        # Convert to ohms.
+        mutate(TransthoracicImpedance = ((TransthoracicImpedance * 0.04176689) - 8.5538812))
       
       plot_ly(height = 600) |>
         add_lines(
@@ -260,7 +266,7 @@ server <- function(input, output, session) {
         add_lines(
           x = ~ImpWav_filtered_impedance$Time_Elapsed_MS,
           y = ~ImpWav_filtered_impedance$TransthoracicImpedance,
-          name = 'Transthoracic Impedance',
+          name = 'Transthoracic Impedance (Ohms)',
           line = list(color = 'green', opacity = 0.5),
           yaxis = 'y2'
         ) |>
@@ -272,7 +278,7 @@ server <- function(input, output, session) {
             automargin = TRUE
           ),
           yaxis2 = list(
-            title = 'Transthoracic Impedance',
+            title = 'Transthoracic Impedance (Ohms)',
             overlaying = 'y',
             side = 'right',
             standoff = 15,
