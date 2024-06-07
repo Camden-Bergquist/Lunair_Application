@@ -3,6 +3,7 @@ library(tidyverse)
 library(shinydashboard)
 library(DT)
 library(plotly)
+library(shinycssloaders)
 
 # UI definition
 ui <- dashboardPage(
