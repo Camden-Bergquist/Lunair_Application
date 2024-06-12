@@ -51,7 +51,7 @@ ui <- dashboardPage(
       tabItem(tabName = "graphs_tab",
               fluidPage(
                 titlePanel("Data Visualization"),
-                selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope", "Stimulus")),
+                selectInput("graph_type", "Select Graph:", choices = c("Accelerometer", "Gyroscope", "Stimulus", "Posture")),
                 div(style = "height: 100%;", withSpinner(plotlyOutput("plotly_graph", height = "100%")))  # Added spinner
               )
       )
@@ -330,6 +330,24 @@ server <- function(input, output, session) {
           legend = list(orientation = 'h'),
           autosize = TRUE,
           margin = list(t = 50, b = 50, l = 50, r = 50)
+        )
+    } else if (input$graph_type == "Posture") {
+      
+      plot_ly(
+        data = df,
+        x = ~Time_Elapsed_MS,
+        y = ~Posture,
+        type = 'scatter',
+        mode = 'markers+lines',
+        # For some reason dynamically coloring the markers red for OOB just breaks when in the app.
+        # Might return to later.
+        marker = list(color = 'black', size = 3),
+        line = list(color = 'black', width = 0.5)
+      ) |>
+        layout(
+          xaxis = list(title = "Time Elapsed (MS)"),
+          yaxis = list(title = "Patient Posture"),
+          showlegend = FALSE
         )
     }
   })

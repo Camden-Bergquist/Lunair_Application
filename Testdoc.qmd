@@ -314,3 +314,24 @@ ggplot(combined_positions, aes(x = Time_Elapsed_MS, y = Posture, group = 1)) +
   theme_minimal()
 ```
 
+```{r posture-plotly}
+colorcombined_positions <- combined_positions |>
+  mutate(MarkerColor = ifelse(Posture != "OOB", "black", "red"))
+
+# Create the plot
+plot_ly(
+  data = colorcombined_positions,
+  x = ~Time_Elapsed_MS,
+  y = ~Posture,
+  type = 'scatter',
+  mode = 'markers+lines',
+  marker = list(color = ~MarkerColor, size = 3),
+  line = list(color = 'black', width = 0.5)
+) |>
+  layout(
+    xaxis = list(title = "Time Elapsed (MS)"),
+    yaxis = list(title = "Patient Posture"),
+    showlegend = FALSE
+  )
+```
+
