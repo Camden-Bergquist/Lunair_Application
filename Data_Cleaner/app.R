@@ -128,6 +128,39 @@ server <- function(input, output, session) {
       df <- df |>
         pivot_wider(names_from = Channel, values_from = Value, values_fill = NA)
       
+      # Apply additional transformations
+      df <- df |>
+        # Floor divide to convert values between -2^14 and 2^14 to -90 to 90.
+        mutate(InclineDegrees = floor(IMUAccelerometerZ / 182)) |>
+        # Values within 10 degrees of 0 or 90 converted to 0 or 90 so that minor movement doesn't throw things off.
+        mutate(InclineDegrees = case_when(
+          InclineDegrees >= 91 & InclineDegrees <= 100 ~ 90,
+          InclineDegrees >= -10 & InclineDegrees <= -1 ~ 0,
+          InclineDegrees >= -100 & InclineDegrees <= -90 ~ -90,
+          TRUE ~ InclineDegrees)) |>
+        # Remaining values modified to be the absolute value of their former value -90 (flips the ends of the range,
+        # since 2^14 refers to 0, not 90 degrees).
+        mutate(InclineDegrees = abs(InclineDegrees - 90)) |>
+        # Add new column `InclinePosition` with categorical variables based on degrees.
+        mutate(InclinePosition = case_when(
+          InclineDegrees >= 0 & InclineDegrees <= 25 ~ "Supine",
+          InclineDegrees >= 26 & InclineDegrees <= 45 ~ "Shallow_Incline",
+          InclineDegrees >= 46 & InclineDegrees <= 65 ~ "Steep_Incline",
+          InclineDegrees >= 66 & InclineDegrees <= 90 ~ "Upright",
+          InclineDegrees >= 155 & InclineDegrees <= 180 ~ "Prone",
+          TRUE ~ "OOB")) |>
+        # Create new column `Posture`.
+        mutate(
+          Posture = case_when(
+            is.na(IMUAccelerometerX) | is.na(IMUAccelerometerX) | is.na(IMUAccelerometerX) ~ NA,
+            IMUAccelerometerX >= 8192 & IMUAccelerometerX <= 18000 ~ "Left_Lateral",
+            IMUAccelerometerX <= -8192 & IMUAccelerometerX >= -18000 ~ "Right_Lateral",
+            InclinePosition != "OOB" ~ InclinePosition,
+            TRUE ~ "OOB")) |>
+        # Reorder levels for Posture while converting to factor.
+        mutate(Posture = factor(Posture, levels = c("Prone", "Left_Lateral", "Right_Lateral", "Supine", "Shallow_Incline", "Steep_Incline", "Upright", "OOB"))) |>
+        select(-InclineDegrees, -InclinePosition)
+      
       incProgress(0.8)
       
       df
@@ -154,7 +187,8 @@ server <- function(input, output, session) {
                        choices = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                    "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
                                    "TransthoracicImpedance", "EventLeadImpedanceStart", 
-                                   "StimulationWaveform", "EventTherapyOn", "EventTherapyOff"),
+                                   "StimulationWaveform", "EventTherapyOn", "EventTherapyOff",
+                                   "Posture"),
                        selected = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                     "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
                                     "TransthoracicImpedance"))
