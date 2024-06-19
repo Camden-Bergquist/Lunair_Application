@@ -635,8 +635,30 @@ possible postures (such as from <code>Supine</code> to
 which is to say that it is possible and expected for the graph to jump
 from any one posture to any other posture, rather than moving
 incrementally from neighboring posture to neighboring posture.</p>
+<p><br></p>
 </div>
 </div>
+</div>
+<div id="to-do" class="section level1">
+<h1>To-Do:</h1>
+<ul>
+<li>Add support for logs sourced from programmer version 1.0.7.
+<ul>
+<li>In particular, look into how to handle the new channels. Two are
+just numbers — see if Jim got any information out of Integer from them —
+while the other two are posture indicators. The logic should probably be
+written to ignore everything for now(?), since the posture indicators
+don’t really work in the first place, and the other two channels are
+unknown agents.</li>
+</ul></li>
+<li>Consider the removal of <code>EventLeadImpedanceStart</code>,
+<code>EventTherapyOn</code>, and <code>EventTherapyOff</code> from the
+checkbox menu as they’re often left blank and ultimately provide little
+value.</li>
+<li><em>Maybe</em> consider adding logic for some sort of calibration
+related to posture calculation? Lots of work for little value
+there.</li>
+</ul>
 </div>
 
 

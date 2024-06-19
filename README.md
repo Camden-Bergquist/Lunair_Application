@@ -90,3 +90,12 @@ In the case that a marker log dataset does not include both `StimulationWaveform
 ### Posture:
 
 The posture graph visualizes the categorical variable `Posture` against `Time_Elapsed_MS`. There are eight possible Y-axis values. They are, in order from top-to-bottom: `OOB`, `Upright`, `Steep_Incline`, `Shallow_Incline`, `Supine`, `Right_Lateral`, `Left_Lateral`, and `Prone`. Even though there is a degree of continuity between possible postures (such as from `Supine` to `Upright`), postures should not be treated as continuous, which is to say that it is possible and expected for the graph to jump from any one posture to any other posture, rather than moving incrementally from neighboring posture to neighboring posture.
+
+<br>
+
+# To-Do:
+
+- Add support for logs sourced from programmer version 1.0.7.
+  - In particular, look into how to handle the new channels. Two are just numbers --- see if Jim got any information out of Integer from them --- while the other two are posture indicators. The logic should probably be written to ignore everything for now(?), since the posture indicators don't really work in the first place, and the other two channels are unknown agents.
+- Consider the removal of `EventLeadImpedanceStart`, `EventTherapyOn`, and `EventTherapyOff` from the checkbox menu as they're often left blank and ultimately provide little value.
+- *Maybe* consider adding logic for some sort of calibration related to posture calculation? Lots of work for little value there.
