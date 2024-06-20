@@ -277,7 +277,7 @@ server <- function(input, output, session) {
         select(Time_Elapsed_MS, IMUAccelerometerX, IMUAccelerometerY, IMUAccelerometerZ) |>
         filter(!is.na(Time_Elapsed_MS) & !is.na(IMUAccelerometerX) & !is.na(IMUAccelerometerY) & !is.na(IMUAccelerometerZ))
       
-      plot_ly(plot_data, x = ~Time_Elapsed_MS, height = 600) |>
+      plot_ly(plot_data, x = ~Time_Elapsed_MS, height = 450) |>
         add_lines(y = ~IMUAccelerometerX, name = 'Accelerometer X', line = list(color = 'blue2', width = 2), opacity = 0.5) |>
         add_lines(y = ~IMUAccelerometerY, name = 'Accelerometer Y', line = list(color = 'purple', width = 2), opacity = 0.5) |>
         add_lines(y = ~IMUAccelerometerZ, name = 'Accelerometer Z', line = list(color = 'green', width = 2), opacity = 0.5) |>
@@ -308,7 +308,7 @@ server <- function(input, output, session) {
         )
     } else if (input$graph_type == "Stimulus") {
       # Check if columns exist before plotting
-      plot_ly(height = 600) %>%
+      plot_ly(height = 450) %>%
         {if ("StimulationWaveform" %in% colnames(df)) {
           ImpWav_filtered_waveform <- df |> filter(!is.na(StimulationWaveform))
           add_lines(., x = ~ImpWav_filtered_waveform$Time_Elapsed_MS, y = ~ImpWav_filtered_waveform$StimulationWaveform,
