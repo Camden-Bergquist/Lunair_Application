@@ -1,0 +1,12 @@
+name: data_cleaner
+title:
+username: camdentbergquist
+account: camdentbergquist
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 12212726
+bundleId: 8769382
+url: https://camdentbergquist.shinyapps.io/data_cleaner/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
