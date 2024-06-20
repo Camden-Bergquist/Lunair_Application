@@ -88,8 +88,8 @@ extract_and_convert_to_milliseconds <- function(datetime_string) {
 # Server definition
 server <- function(input, output, session) {
   
-  # Set maximum file upload size (currently 64MB)
-  options(shiny.maxRequestSize = 64 * 1024^2)
+  # Set maximum file upload size (currently 1024MB)
+  options(shiny.maxRequestSize = 1024 * 1024^2)
   
   # Show modal dialog to upload file at the start
   showModal(modalDialog(
