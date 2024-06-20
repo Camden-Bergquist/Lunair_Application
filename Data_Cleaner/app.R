@@ -1,3 +1,16 @@
+# List of packages to check and install if missing
+packages <- c("shiny", "tidyverse", "shinydashboard", "DT", "plotly", "shinycssloaders")
+
+# Function to install missing packages
+install_if_missing <- function(pkg) {
+  if (!requireNamespace(pkg, quietly = TRUE)) {
+    install.packages(pkg, quietly = TRUE)
+  }
+}
+
+# Apply the function to each package
+sapply(packages, install_if_missing)
+
 library(shiny)
 library(tidyverse)
 library(shinydashboard)
