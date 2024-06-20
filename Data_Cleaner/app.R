@@ -199,9 +199,7 @@ server <- function(input, output, session) {
     checkboxGroupInput("columns", "Select Columns to Include:",
                        choices = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                    "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
-                                   "TransthoracicImpedance", "EventLeadImpedanceStart", 
-                                   "StimulationWaveform", "EventTherapyOn", "EventTherapyOff",
-                                   "Posture"),
+                                   "TransthoracicImpedance", "StimulationWaveform", "Posture"),
                        selected = c("IMUAccelerometerX", "IMUAccelerometerY", "IMUAccelerometerZ",
                                     "IMUGyroscopeX", "IMUGyroscopeY", "IMUGyroscopeZ", 
                                     "TransthoracicImpedance"))

@@ -37,9 +37,6 @@ Below is a preview of the columns or 'variables' able to be included in the expo
 | `TransthoracicImpedance`  | Numeric   | Transthoracic impedance value (must be mathematically converted into ohms).                                                |
 | `StimulationWaveform`     | Numeric   | Stimulation waveform value as specified in the programmer.                                                                 |
 | `Posture`                 | Character | Dynamically generated column based on accelerometer values. Column added by application; not extant in original dataset.   |
-| `EventLeadImpedanceStart` | Numeric   | Numeric value chronicling the start of therapy lead impedance. Unsure why this is numeric. *Considering complete removal.* |
-| `EventTherapyOn`          | Numeric   | Numeric value chronicling the start of a therapy session. *Considering complete removal.*                                  |
-| `EventTherapyOff`         | Numeric   | Numeric value chronicling the end of a therapy session. *Considering complete removal.*                                    |
 
 A timestep (observation at a given `Time_Elapsed_MS` value) will only be included in the final output if at least value exists at that timestep for any given included column/variable . In other words, if a row is filled entirely with NAs/missing values, it will *not* be included in the final output.
 
@@ -97,5 +94,4 @@ The posture graph visualizes the categorical variable `Posture` against `Time_El
 
 - Add support for logs sourced from programmer version 1.0.7.
   - In particular, look into how to handle the new channels. Two are just numbers --- see if Jim got any information out of Integer from them --- while the other two are posture indicators. The logic should probably be written to ignore everything for now(?), since the posture indicators don't really work in the first place, and the other two channels are unknown agents.
-- Consider the removal of `EventLeadImpedanceStart`, `EventTherapyOn`, and `EventTherapyOff` from the checkbox menu as they're often left blank and ultimately provide little value.
 - *Maybe* consider adding logic for some sort of calibration related to posture calculation? Lots of work for little value there.
